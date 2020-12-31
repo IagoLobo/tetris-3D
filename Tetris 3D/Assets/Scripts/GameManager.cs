@@ -15,7 +15,17 @@ public class GameManager : MonoBehaviour
     private Transform[,] grid = new Transform[10, 20];
 
     private int currentScore;
+    private bool isGameOver = false;
+    [SerializeField] private GameObject scoreCanvas;
     [SerializeField] private TextMeshProUGUI currentScoreText;
+    [SerializeField] private GameObject gameOverCanvas;
+    [SerializeField] private TextMeshProUGUI gameOverScoreText;
+    [SerializeField] private SFXManager sfxManager;
+
+    public bool IsGameOver
+    {
+        get {   return isGameOver;   }
+    }
 
     public int GridHeight
     {
@@ -39,15 +49,21 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        scoreCanvas.SetActive(true);
+        gameOverCanvas.SetActive(false);
+
+        isGameOver = false;
         currentScore = 0;
-        UpdateCurrentScore(currentScore);
+        UpdateScoreText(currentScore);
         SpawnNewBlock();
     }
 
     public void SpawnNewBlock()
     {
         int randomID = Random.Range(0, tetrisBlocks.Length);
-        Instantiate(tetrisBlocks[randomID], spawnPoint.position, Quaternion.identity);
+        GameObject newTetrisBlock = Instantiate(tetrisBlocks[randomID], spawnPoint.position, Quaternion.identity);
+
+        CheckBlockOverlap(newTetrisBlock);
     }
 
     public void AddTetrisBlockToGrid(GameObject tetrisBlock)
@@ -72,6 +88,25 @@ public class GameManager : MonoBehaviour
                 AddScore();
             }
         }
+    }
+
+    private void CheckBlockOverlap(GameObject newTetrisBlock)
+    {
+        bool hasBlockOverlap = false;
+
+        foreach(Transform block in newTetrisBlock.transform)
+        {
+            int xInt = Mathf.RoundToInt(block.transform.position.x);
+            int yInt = Mathf.RoundToInt(block.transform.position.y);
+
+            if(grid[xInt, yInt] != null)
+            {
+                hasBlockOverlap = true;
+                break;
+            }
+        }
+
+        if(hasBlockOverlap) GameOver();
     }
 
     private bool IsRowFull(int j)
@@ -112,12 +147,28 @@ public class GameManager : MonoBehaviour
     private void AddScore()
     {
         currentScore += 10;
-        UpdateCurrentScore(currentScore);
+        UpdateScoreText(currentScore);
+        sfxManager.PlayClearRowSFX();
     }
 
-    private void UpdateCurrentScore(int score)
+    private void UpdateScoreText(int score)
     {
-        currentScoreText.text = "Score: \n" + $"{score}";
+        string scoreText = "Score: \n" + $"{score}";
+        currentScoreText.text = scoreText;
+        gameOverScoreText.text = scoreText;
+    }
+
+    private void GameOver()
+    {
+        isGameOver = true;
+        UpdateScoreText(currentScore);
+        scoreCanvas.SetActive(false);
+        gameOverCanvas.SetActive(true);
+    }
+
+    public void PlayAgainButton()
+    {
+        SceneManager.LoadScene("Gameplay");
     }
 
     public void GoToMainMenuButton()

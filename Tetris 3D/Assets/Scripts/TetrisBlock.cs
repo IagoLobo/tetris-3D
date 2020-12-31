@@ -10,8 +10,11 @@ public class TetrisBlock : MonoBehaviour
 
     private void Update()
     {
-        MoveBlock();
-        BlockFallingDown();
+        if(!GameManager.Instance.IsGameOver)
+        {
+            MoveBlock();
+            BlockFallingDown();
+        }
     }
 
     private void MoveBlock()
