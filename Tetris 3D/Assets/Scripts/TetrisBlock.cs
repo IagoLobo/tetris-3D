@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Class that controls the Tetris blocks during their fall
 public class TetrisBlock : MonoBehaviour
 {
     public Vector3 rotationPoint;
@@ -10,6 +11,7 @@ public class TetrisBlock : MonoBehaviour
 
     private void Update()
     {
+        // While game isn't over, keep block movement
         if(!GameManager.Instance.IsGameOver)
         {
             MoveBlock();
@@ -17,6 +19,10 @@ public class TetrisBlock : MonoBehaviour
         }
     }
 
+    // Method that implements the block movement:
+    // -> A or LeftArrow moves to the left
+    // -> D or RightArrow moves to the right
+    // -> W or UpArrow rotates the block to the right
     private void MoveBlock()
     {
         if(Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
@@ -35,6 +41,8 @@ public class TetrisBlock : MonoBehaviour
         }
     }
 
+    // Method that controls the block's descent over time
+    // The block falls faster if the player presses S or DownArrow
     private void BlockFallingDown()
     {
         lastTimeBlockFell += Time.deltaTime;
@@ -48,21 +56,33 @@ public class TetrisBlock : MonoBehaviour
             if(!IsMoveValid())
             {
                 transform.position -= new Vector3(0, -1, 0);
+
+                // Adds this block to the game grid as a static block
                 GameManager.Instance.AddTetrisBlockToGrid(this.gameObject);
+
+                // Checks if there is any rows that are complete
                 GameManager.Instance.CheckRowCleared();
+
+                // Spawns new block to fall
                 GameManager.Instance.SpawnNewBlock();
+
+                // Disables this object so it doesn't move anymore
                 this.enabled = false;
             }
         }
     }
 
+    // Method that rotates the tetris block
     private void RotateBlock()
     {
+        // RotationPoint is local and RotateAround() only works with world positions, so we need to change to that first
         Vector3 globalRotationPoint = transform.TransformPoint(rotationPoint);
         transform.RotateAround(globalRotationPoint, new Vector3(0, 0, 1), -90);
         if(!IsMoveValid())  transform.RotateAround(globalRotationPoint, new Vector3(0, 0, 1), 90);
     }
 
+    // Method that checks if the block's move is still in the grid
+    // If it isn't, the move needs to be undone
     private bool IsMoveValid()
     {
         foreach(Transform block in transform)
